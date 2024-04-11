@@ -16,7 +16,7 @@ let listaProductosVodka = [
         marca: "Sky",
         precio: 4500,
     }
-]
+];
 let listaProductoFernet = [
     {
         marca: "Branca",
@@ -34,7 +34,7 @@ let listaProductoFernet = [
         marca: "1882",
         precio: 6500,
     }
-]
+];
 let listaProductoCervezas = [
     {
         marca: "Quilmes",
@@ -52,8 +52,17 @@ let listaProductoCervezas = [
         marca:"Corona",
         precio: 2500,
     }
-]
-let producto = parseInt(prompt("Ingresa el producto que estas buscando:\n 1-Vodka\n 2-Fernet\n 3-Cerveza\n 0-Salir"));
+];
+function buscarProductoPorMarca(lista, marca) {
+    return lista.find(lista => lista.marca.toLowerCase() == marca.toLowerCase());
+}
+function filtrarProductosPorPrecio(lista, precioMaximo) {
+    return lista.filter(lista => lista.precio <= precioMaximo);
+}
+function obtenerOpcionFiltrado() {
+    return parseInt(prompt("Selecciona una opción de filtrado:\n1- Filtrar por marca\n2- Filtrar por precio\n0- Volver"));
+}
+let producto = parseInt(prompt("Ingresa el producto que estas buscando:\n 1-Vodka\n 2-Fernet\n 3-Cerveza\n 4-Buscar marca o filtrar precio\n 0-Salir"));
 let total = 0;
 const descuentoEfectivo = 0.9;
 const IVA = 1.21;
@@ -323,10 +332,61 @@ const IVA = 1.21;
                 cervezas = parseInt(prompt("Selecciona el tipo de bebida que quieres agregar al carrito:\n 0-Volver\n1-"+listaProductoCervezas[0].marca +" \n 2-"+listaProductoCervezas[1].marca +"\n 3-"+listaProductoCervezas[2].marca+"\n 4-"+listaProductoCervezas[3].marca));
             }
             break;
+            case 4:
+                function buscarOFiltrarProductos(lista) {
+                    let opcion = obtenerOpcionFiltrado();
+                    switch(opcion) {
+                        case 1:
+                            let marcaBuscada = prompt("Ingresa la marca que deseas buscar:");
+                            let productoEncontrado = buscarProductoPorMarca(lista, marcaBuscada);
+                            if (productoEncontrado) {
+                                alert("Producto encontrado: " + JSON.stringify(productoEncontrado));
+                            } else {
+                                alert("No se encontró ningún producto con esa marca.");
+                            }
+                            break;
+                        case 2:
+                            let precioMaximo = parseFloat(prompt("Ingresa el precio máximo para el filtro:"));
+                            let productosFiltrados = filtrarProductosPorPrecio(lista, precioMaximo);
+                            if (productosFiltrados.length > 0) {
+                                alert("Productos encontrados: \n" + JSON.stringify(productosFiltrados));
+                            } else {
+                                alert("No se encontraron productos dentro del rango de precio especificado.");
+                            }
+                            break;
+                        case 0:
+                            break;
+                        default:
+                            alert("Opción inválida. Por favor, selecciona una opción válida.");
+                            buscarOFiltrarProductos(lista);
+                    }
+                }
+                
+                let producto = parseInt(prompt("Ingresa el producto que estás buscando:\n 1-Vodka\n 2-Fernet\n 3-Cerveza\n 0-Salir"));                
+                while (producto !== 0) {
+                    switch(producto) {
+                        case 1:
+                            buscarOFiltrarProductos(listaProductosVodka);
+                            break;
+                        case 2:
+                            buscarOFiltrarProductos(listaProductoFernet);
+                            break;
+                        case 3:
+                            buscarOFiltrarProductos(listaProductoCervezas);
+                            break;
+                        case 0:
+                            break;
+                        default:
+                            alert("Ingresa una opción válida.");
+                            break;
+                    }
+                    producto = parseInt(prompt("Ingresa el producto que estás buscando:\n 1-Vodka\n 2-Fernet\n 3-Cerveza\n 0-Salir"));
+                }
+                break;
             default:
                 alert("ingrese una opcion valida");
         }
-        producto = parseInt(prompt("Ingresa el producto que estas buscando:\n 1-Vodka\n 2-Fernet\n 3-Cerveza\n 0-Salir"));
+        producto = parseInt(prompt("Ingresa el producto que estas buscando:\n 1-Vodka\n 2-Fernet\n 3-Cerveza\n 4-Buscar marca o filtrar precio \n0-Salir"));
     }
 
 if (total != 0){
@@ -358,4 +418,6 @@ function totalConImpuestosYDescuentos(impuestos, descuentos){
     }
     return pagoConImpuestosYDescuentos;
 }
+
+
 
