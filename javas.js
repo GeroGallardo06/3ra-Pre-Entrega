@@ -1,58 +1,4 @@
 
-let listaProductosVodka = [
-    {
-        marca: "Smirnoff",
-        precio: 5000,
-    },
-    {
-        marca: "Absolut",
-        precio: 7000,
-    },
-    {
-        marca: "Sernova",
-        precio: 4000,
-    },
-    {
-        marca: "Sky",
-        precio: 4500,
-    }
-];
-let listaProductoFernet = [
-    {
-        marca: "Branca",
-        precio: 7000,
-    },
-    {
-        marca: "Cinzano",
-        precio: 5000,
-    },
-    {
-        marca: "Buhero negro",
-        precio: 6000,
-    },
-    {
-        marca: "1882",
-        precio: 6500,
-    }
-];
-let listaProductoCervezas = [
-    {
-        marca: "Quilmes",
-        precio: 2000,
-    },
-    {
-        marca: "Andes",
-        precio: 2300,
-    },
-    {
-        marca:"Salta",
-        precio: 2000,
-    },
-    {
-        marca:"Corona",
-        precio: 2500,
-    }
-];
 function buscarProductoPorMarca(lista, marca) {
     return lista.find(lista => lista.marca.toLowerCase() == marca.toLowerCase());
 }
@@ -62,11 +8,11 @@ function filtrarProductosPorPrecio(lista, precioMaximo) {
 function obtenerOpcionFiltrado() {
     return parseInt(prompt("Selecciona una opción de filtrado:\n1- Filtrar por marca\n2- Filtrar por precio\n0- Volver"));
 }
-let producto = parseInt(prompt("Ingresa el producto que estas buscando:\n 1-Vodka\n 2-Fernet\n 3-Cerveza\n 4-Buscar marca o filtrar precio\n 0-Salir"));
+/*let producto = parseInt(prompt("Ingresa el producto que estas buscando:\n 1-Vodka\n 2-Fernet\n 3-Cerveza\n 4-Buscar marca o filtrar precio\n 0-Salir"));*/
 let total = 0;
 const descuentoEfectivo = 0.9;
 const IVA = 1.21;
-    while (producto != 0){
+    /* while (producto != 0){
         switch(producto){
             case 1:
                 let vodkas = parseInt(prompt("Selecciona el tipo de bebida que quieres agregar al carrito:\n 0-Volver\n 1-"+ listaProductosVodka[0].marca + "\n 2-"+ listaProductosVodka[1].marca + "\n 3-"+ listaProductosVodka[2].marca + "\n 4-"+ listaProductosVodka[3].marca));
@@ -388,8 +334,8 @@ const IVA = 1.21;
         }
         producto = parseInt(prompt("Ingresa el producto que estas buscando:\n 1-Vodka\n 2-Fernet\n 3-Cerveza\n 4-Buscar marca o filtrar precio \n0-Salir"));
     }
-
-if (total != 0){
+*/
+/*if (total != 0){
 let modoDePago = parseInt(prompt("en el carrito llevas un total de: $"+ total+"\n Elije un metodo de pago:\n 1-Efectivo 2-Debito 3-Transferencia 0-Salir"));
 
     if (modoDePago == 0){
@@ -406,7 +352,7 @@ let modoDePago = parseInt(prompt("en el carrito llevas un total de: $"+ total+"\
     }
 }else{
     alert("Vuelva pronto!!")
-}
+}*/
 
 function totalConImpuestosYDescuentos(impuestos, descuentos){
     let pagoConImpuestos = total * impuestos;
@@ -418,6 +364,195 @@ function totalConImpuestosYDescuentos(impuestos, descuentos){
     }
     return pagoConImpuestosYDescuentos;
 }
+
+let totalEnElCarrito = document.getElementById("totalDelCarrito");
+let tablaDelCarrito = document.getElementById("tablaDeCarrito")
+botonBorrarCarrito.innerHTML+=`
+<button class="btn btn-primary" id="borrarCarrito">vaciar carrito</button>
+`
+let borrarCarrito = document.getElementById("borrarCarrito")
+function vaciarCarrito(){
+    total = 0;
+    totalEnElCarrito.innerHTML = `
+        <h3>Total: $0.00</h3>
+    `;
+    CarritoDeCompras = [];
+    tablaDelCarrito.innerHTML =`
+        <tr>
+            <td></td>
+            <td></td>
+        </tr>
+    `
+    pagar.innerHTML =`
+        <button class="btn btn-warning" id="botonPagar">Pagar</button>
+    `
+    const nuevoBotonPagar = document.getElementById("botonPagar");
+    nuevoBotonPagar.addEventListener("click", pagarCarrito);
+    localStorage.clear();
+}
+
+function agregarAlCarrito (producto){
+    CarritoDeCompras.push(producto);
+    tablaDelCarrito.innerHTML +=`
+        <tr class="tabla-de-productos">
+            <td> ${producto.marca}</td>
+            <td>$ ${producto.precio}<button class="btn btn-danger" id="borrarElemento">Borrar(Proximamente)</button></td>
+        </tr>
+    `
+    let borrarElemento = document.getElementById("borrarElemento");
+    const claveProducto = `producto-${producto.id}`;
+    const productoAStorage = JSON.stringify(producto);
+    localStorage.setItem(claveProducto, productoAStorage);
+}
+function agregarAlTotal (producto){
+    total += producto.precio
+    totalEnElCarrito.innerHTML = `
+        <h3>Total: $${total.toFixed(2)}</h3> 
+    `;
+
+}
+
+const cartasDeVodka = document.getElementById("ProductoVodka");
+cartasDeVodka.className="row container gap-3 mx-auto my-3"
+
+function cartasDeProductoVodka (listaProductos){
+    for (const producto of listaProductos){
+        cartasDeVodka.innerHTML +=`
+        <div class="card" style="width: 200px; height:fit-content;">
+            <img class="card-img-top" src="${producto.img}" alt="${producto.marca}">
+            <div class="card-body">
+                <h5 class="card-title">${producto.marca}</h5>
+                <p class="card-text">precio:$ ${producto.precio}</p>
+                <button class="btn btn-primary compra" id=${producto.id}>comprar</button>
+            </div>
+        </div>
+        `
+    }
+    const botonesDeCompra = document.getElementsByClassName("compra")
+    for (const boton of botonesDeCompra){
+        boton.addEventListener("click",() =>{
+            const productoAlCarrito = listaProductos.find(prods => prods.id == boton.id);
+            agregarAlCarrito(productoAlCarrito);
+            agregarAlTotal(productoAlCarrito);
+        })
+        
+        }
+}
+cartasDeProductoVodka(listaProductosVodka)
+
+const cartasDeFernet = document.getElementById("ProductoFernet");
+cartasDeFernet.className="row container gap-3 mx-auto my-3"
+
+function cartasDeProductoFernet (listaProductos){
+    for (const producto of listaProductos){
+        cartasDeFernet.innerHTML +=`
+        <div class="card" style="width: 200px; height:fit-content;">
+            <img class="card-img-top" src="${producto.img}" alt="${producto.marca}">
+            <div class="card-body">
+                <h5 class="card-title">${producto.marca}</h5>
+                <p class="card-text">precio:$ ${producto.precio}</p>
+                <button class="btn btn-primary compra" id=${producto.id}>comprar</button>
+            </div>
+        </div>
+        `
+    }
+    const botonesDeCompra = document.getElementsByClassName("compra")
+    for (const boton of botonesDeCompra){
+        boton.addEventListener("click",() =>{
+            const productoAlCarrito = listaProductos.find(prods => prods.id == boton.id);
+            agregarAlCarrito(productoAlCarrito);
+            agregarAlTotal(productoAlCarrito);
+        })
+        
+        }
+}
+cartasDeProductoFernet(listaProductoFernet)
+
+const cartasDeCerveza = document.getElementById("ProductoCerveza");
+cartasDeCerveza.className="row container gap-3 mx-auto my-3"
+
+
+function cartasDeProductoCerveza (listaProductos){
+    for (const producto of listaProductos){
+        cartasDeCerveza.innerHTML +=`
+        <div class="card" style="width: 200px; height:fit-content;">
+            <img class="card-img-top" src="${producto.img}" alt="${producto.marca}">
+            <div class="card-body">
+                <h5 class="card-title">${producto.marca}</h5>
+                <p class="card-text">precio:$ ${producto.precio}</p>
+                <button class="btn btn-primary compra" id=${producto.id}>comprar</button>
+            </div>
+        </div>
+        `
+    }
+    const botonesDeCompra = document.getElementsByClassName("compra")
+    for (const boton of botonesDeCompra){
+        boton.addEventListener("click",() =>{
+            const productoAlCarrito = listaProductos.find(prods => prods.id == boton.id);
+            agregarAlCarrito(productoAlCarrito);
+            agregarAlTotal(productoAlCarrito);
+        })
+        
+        }
+}
+cartasDeProductoCerveza(listaProductoCervezas)
+
+borrarCarrito.addEventListener("click",vaciarCarrito);
+
+const pagar = document.getElementById("pagar");
+pagar.innerHTML =`
+<button class="btn btn-warning" id="botonPagar">Pagar</button>
+`
+const botonPagar = document.getElementById("botonPagar")
+function pagoEfectivo(){
+    pagar.innerHTML =`
+        <h3>Por pagar en efectivo tenemos un descuento para vos!!</h3>
+        <h4>El total a pagar es: $ ${totalConImpuestosYDescuentos(1,descuentoEfectivo)}</h4>
+    `
+}
+function pagoCredito(){
+    pagar.innerHTML =`
+    <h3>Los pagos por Credito tienen un recargo por IVA:</h3>
+    <h4>El total a pagar es: $ ${totalConImpuestosYDescuentos(IVA, 0)}</h4>
+`
+}
+function pagoTransferencia(){
+    pagar.innerHTML =`
+    <h3>Los pagos por Transferencia tienen un recargo por IVA:</h3>
+    <h4>El total a pagar es: $ ${totalConImpuestosYDescuentos(IVA, 0)}</h4>
+`
+}
+
+
+function pagarCarrito (){
+    if (total != 0){
+        pagar.innerHTML = `
+            <h3>seleccione el metodo de pago:</h3>
+            <button id="botonEfectivo" class="btn btn-warning">Efectivo</button>
+            <button id="botonCredito" class="btn btn-warning">Credito</button>
+            <button id="botonTransferencia" class="btn btn-warning">Transferencia</button>
+        `
+        const botonEfectivo = document.getElementById("botonEfectivo");
+        botonEfectivo.addEventListener("click",pagoEfectivo);
+        const botonCredito = document.getElementById("botonCredito");
+        botonCredito.addEventListener("click",pagoCredito);
+        const botonTransferencia = document.getElementById("botonTransferencia");
+        botonTransferencia.addEventListener("click",pagoTransferencia);
+    }else{
+        pagar.innerHTML +=`
+    <h3>Agregue elementos al carrito para pagar</h3>
+`
+const nuevoBotonPagar = document.getElementById("botonPagar");
+    nuevoBotonPagar.addEventListener("click", pagarCarrito);
+    }
+}
+botonPagar.addEventListener("click",pagarCarrito)
+
+function guardarCarritoEnLocalStorage() {
+    const carritoALocalStorage = JSON.stringify(CarritoDeCompras);
+    localStorage.setItem('carrito', carritoALocalStorage);
+}
+
 
 
 

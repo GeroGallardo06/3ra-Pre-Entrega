@@ -1,0 +1,67 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+header{
+    background-color: rgba(127, 255, 212, 0.428);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    font-size: 30px;
+    border: double 7px rgb(0, 0, 0);
+    
+}
+
+.seccion-productos{
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+    width: 100%;
+}
+.productos-disponibles{
+    font-size: 30x;
+    padding: 15px;
+    border:double 5px rgb(144, 202, 144);
+    border-radius: 5px;
+    width: 100%;
+    text-align: center;
+}
+
+
+
+.carrito-de-compras{
+    width: 100%;
+    padding: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.carrito-de-compras table{
+    border-collapse: collapse; 
+    width: 100%; 
+    background-color: white;
+    border: 1px solid #474444;
+}
+
+.carrito-de-compras table thead tr{
+    display: flex;
+    justify-content: space-evenly;
+    width: 100%;
+}
+.carrito-de-compras table tbody tr{
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    padding: 5px;
+}
+.seccion-borrar-carrito{
+    margin: 20px;
+}
+.seccion-pago{
+    margin: 20px;
+}
