@@ -1,0 +1,12 @@
+{
+  "name": "entregas-coder",
+  "version": "1.0.0",
+  "description": "<h1 align=\"center\">Hi 👋, I'm Gerónimo Gallardo</h1>\r <h3 align=\"center\">civil engineering student at UNT and fullstack developer student</h3>",
+  "main": "javas.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

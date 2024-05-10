@@ -371,6 +371,7 @@ botonBorrarCarrito.innerHTML+=`
 <button class="btn btn-primary" id="borrarCarrito">vaciar carrito</button>
 `
 let borrarCarrito = document.getElementById("borrarCarrito")
+
 function vaciarCarrito(){
     total = 0;
     totalEnElCarrito.innerHTML = `
@@ -386,31 +387,117 @@ function vaciarCarrito(){
     pagar.innerHTML =`
         <button class="btn btn-warning" id="botonPagar">Pagar</button>
     `
-    const nuevoBotonPagar = document.getElementById("botonPagar");
-    nuevoBotonPagar.addEventListener("click", pagarCarrito);
-    localStorage.clear();
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+        const clave = localStorage.key(i);
+        if (clave.startsWith('producto_')) {
+            localStorage.removeItem(clave);
+        }
+    }
+    pagarCarrito ()
+    Toastify({
+        text: "Su carrito fue vaciado",
+        duration: 3000,   
+        backgroundColor: "red"   
+        }).showToast();
 }
 
-function agregarAlCarrito (producto){
-    CarritoDeCompras.push(producto);
-    tablaDelCarrito.innerHTML +=`
-        <tr class="tabla-de-productos">
-            <td> ${producto.marca}</td>
-            <td>$ ${producto.precio}<button class="btn btn-danger" id="borrarElemento">Borrar(Proximamente)</button></td>
-        </tr>
-    `
-    let borrarElemento = document.getElementById("borrarElemento");
-    const claveProducto = `producto-${producto.id}`;
-    const productoAStorage = JSON.stringify(producto);
-    localStorage.setItem(claveProducto, productoAStorage);
+function borrarProductoDelCarrito(id) {
+    CarritoDeCompras = CarritoDeCompras.filter((producto) => producto.id !== parseInt(id));
+    localStorage.removeItem(`producto_${id}`);
+    const filaProducto = tablaDelCarrito.querySelector(`tr[data-id="${id}"]`);
+    if (filaProducto) {
+        filaProducto.remove();
+    }
+    calcularTotal();
 }
-function agregarAlTotal (producto){
-    total += producto.precio
-    totalEnElCarrito.innerHTML = `
-        <h3>Total: $${total.toFixed(2)}</h3> 
-    `;
 
+function escuchadorParaBorrar() {
+    const botonesBorrar = document.querySelectorAll('.btn-danger[data-id]');
+    botonesBorrar.forEach((boton) => {
+        boton.addEventListener('click', (event) => {
+            const id = event.target.getAttribute('data-id');
+            borrarProductoDelCarrito(id);
+        });
+    });
 }
+
+function agregarAlCarrito(producto) {
+    const claveProducto = `producto_${producto.id}`;
+    let productoExistente = JSON.parse(localStorage.getItem(claveProducto));
+
+    if (productoExistente) {
+        productoExistente.cantidad++;
+        localStorage.setItem(claveProducto, JSON.stringify(productoExistente));
+        const filaProducto = tablaDelCarrito.querySelector(`tr[data-id="${producto.id}"] .cantidad`);
+        if (filaProducto) {
+            filaProducto.innerText = productoExistente.cantidad;
+        }
+    } else {
+        productoExistente = { ...producto, cantidad: 1 };
+        localStorage.setItem(claveProducto, JSON.stringify(productoExistente));
+        tablaDelCarrito.innerHTML += `
+            <tr class="tabla-de-productos" data-id="${producto.id}">
+                <td>${producto.marca}</td>
+                <td>$${producto.precio.toFixed(2)}</td>
+                <td class="cantidad">${productoExistente.cantidad}</td>
+                <td><button class="btn btn-danger" data-id="${producto.id}">Borrar</button></td>
+            </tr>
+        `;
+    }
+    const carritoIndex = CarritoDeCompras.findIndex((p) => p.id === producto.id);
+    if (carritoIndex !== -1) {
+        CarritoDeCompras[carritoIndex].cantidad = productoExistente.cantidad;
+    } else {
+        CarritoDeCompras.push(productoExistente);
+    }
+    calcularTotal();
+    escuchadorParaBorrar()
+}
+
+function cargarCarritoDesdeLocalStorage() {
+    CarritoDeCompras = [];
+    tablaDelCarrito.innerHTML = '';
+
+
+    for (let i = 0; i < localStorage.length; i++) {
+
+        const clave = localStorage.key(i);
+        
+        if (clave.startsWith('producto_')) {
+
+            const productoSerializado = localStorage.getItem(clave);
+            
+            const producto = JSON.parse(productoSerializado);
+            
+            CarritoDeCompras.push(producto);
+
+            tablaDelCarrito.innerHTML += `
+                <tr class="tabla-de-productos" data-id="${producto.id}">
+                    <td>${producto.marca}</td>
+                    <td>$${producto.precio.toFixed(2)}</td>
+                    <td class="cantidad">${producto.cantidad || 1}</td>
+                    <td><button class="btn btn-danger" data-id="${producto.id}">Borrar</button></td>
+                </tr>
+            `;
+        }
+    }
+    calcularTotal();
+    escuchadorParaBorrar()
+}
+
+
+
+function calcularTotal() {
+    total = 0;
+    total = CarritoDeCompras.reduce((suma, producto) => suma + (producto.precio * producto.cantidad), 0);
+    totalEnElCarrito.innerHTML = `<h3>Total: $${total.toFixed(2)}</h3>`;
+}
+
+window.addEventListener('load', cargarCarritoDesdeLocalStorage);
+
+
+
+
 
 const cartasDeVodka = document.getElementById("ProductoVodka");
 cartasDeVodka.className="row container gap-3 mx-auto my-3"
@@ -433,7 +520,11 @@ function cartasDeProductoVodka (listaProductos){
         boton.addEventListener("click",() =>{
             const productoAlCarrito = listaProductos.find(prods => prods.id == boton.id);
             agregarAlCarrito(productoAlCarrito);
-            agregarAlTotal(productoAlCarrito);
+            Toastify({
+                text: "Agrego " + productoAlCarrito.marca  + " al carrito",
+                duration: 3000,    
+                backgroundColor: "sky-blue" 
+                }).showToast();
         })
         
         }
@@ -460,8 +551,17 @@ function cartasDeProductoFernet (listaProductos){
     for (const boton of botonesDeCompra){
         boton.addEventListener("click",() =>{
             const productoAlCarrito = listaProductos.find(prods => prods.id == boton.id);
-            agregarAlCarrito(productoAlCarrito);
-            agregarAlTotal(productoAlCarrito);
+            if (productoAlCarrito) {
+                agregarAlCarrito(productoAlCarrito);
+                Toastify({
+                    text: "Agrego " + productoAlCarrito.marca  + " al carrito",
+                    duration: 3000,    
+                    backgroundColor: "brown" 
+                    }).showToast();
+                console.log('Producto encontrado:', productoAlCarrito);
+            } else {
+                console.error(`Producto con id ${boton.id} no encontrado`);
+            }
         })
         
         }
@@ -489,10 +589,17 @@ function cartasDeProductoCerveza (listaProductos){
     for (const boton of botonesDeCompra){
         boton.addEventListener("click",() =>{
             const productoAlCarrito = listaProductos.find(prods => prods.id == boton.id);
-            agregarAlCarrito(productoAlCarrito);
-            agregarAlTotal(productoAlCarrito);
+            if (productoAlCarrito) {
+                agregarAlCarrito(productoAlCarrito);
+                Toastify({
+                    text: "Agrego " + productoAlCarrito.marca  + " al carrito",
+                    duration: 3000,    
+                    backgroundColor: "#FFDD33" 
+                    }).showToast();
+            } else {
+                console.error(`Producto con id ${boton.id} no encontrado`);
+            }
         })
-        
         }
 }
 cartasDeProductoCerveza(listaProductoCervezas)
@@ -509,18 +616,75 @@ function pagoEfectivo(){
         <h3>Por pagar en efectivo tenemos un descuento para vos!!</h3>
         <h4>El total a pagar es: $ ${totalConImpuestosYDescuentos(1,descuentoEfectivo)}</h4>
     `
+    Toastify({
+        text: "Gracias por su compra!",
+        duration: 3000       
+        }).showToast();
+        
+    let tiempoRestante = localStorage.getItem('tiempoRestante');
+    if (tiempoRestante === null || isNaN(tiempoRestante)) {
+        tiempoRestante = 48 * 60 * 60;
+    } else {
+        tiempoRestante = parseInt(tiempoRestante);
+    }
+
+    mostrarContadorHTML(tiempoRestante)
+        .then(() => {
+            console.log('Pedido cancelado');
+        })
+        .catch((error) => {
+            console.error('Error al mostrar el contador:', error);
+        });
 }
 function pagoCredito(){
     pagar.innerHTML =`
     <h3>Los pagos por Credito tienen un recargo por IVA:</h3>
     <h4>El total a pagar es: $ ${totalConImpuestosYDescuentos(IVA, 0)}</h4>
 `
+    Toastify({
+        text: "Gracias por su compra!",
+        duration: 3000       
+        }).showToast();
+        
+    let tiempoRestante = localStorage.getItem('tiempoRestante');
+    if (tiempoRestante === null || isNaN(tiempoRestante)) {
+        tiempoRestante = 48 * 60 * 60;
+    } else {
+        tiempoRestante = parseInt(tiempoRestante);
+    }
+
+    mostrarContadorHTML(tiempoRestante)
+        .then(() => {
+            console.log('Pedido cancelado');
+        })
+        .catch((error) => {
+            console.error('Error al mostrar el contador:', error);
+        });
 }
-function pagoTransferencia(){
+function pagoTransferencia() {
     pagar.innerHTML =`
     <h3>Los pagos por Transferencia tienen un recargo por IVA:</h3>
     <h4>El total a pagar es: $ ${totalConImpuestosYDescuentos(IVA, 0)}</h4>
-`
+    `;
+    Toastify({
+        text: "Gracias por su compra!",
+        duration: 3000
+    }).showToast();
+
+    let tiempoRestante = localStorage.getItem('tiempoRestante');
+    if (tiempoRestante === null || isNaN(tiempoRestante)) {
+        tiempoRestante = 48 * 60 * 60;
+    } else {
+        tiempoRestante = parseInt(tiempoRestante);
+    }
+
+    mostrarContadorHTML(tiempoRestante)
+        .then(() => {
+            console.log('Pedido cancelado');
+        })
+        .catch((error) => {
+            console.error('Error al mostrar el contador:', error);
+        });
 }
 
 
@@ -539,20 +703,67 @@ function pagarCarrito (){
         const botonTransferencia = document.getElementById("botonTransferencia");
         botonTransferencia.addEventListener("click",pagoTransferencia);
     }else{
-        pagar.innerHTML +=`
-    <h3>Agregue elementos al carrito para pagar</h3>
-`
-const nuevoBotonPagar = document.getElementById("botonPagar");
+    const nuevoBotonPagar = document.getElementById("botonPagar");
     nuevoBotonPagar.addEventListener("click", pagarCarrito);
     }
 }
-botonPagar.addEventListener("click",pagarCarrito)
+botonPagar.addEventListener("click",pagarCarrito);
 
-function guardarCarritoEnLocalStorage() {
-    const carritoALocalStorage = JSON.stringify(CarritoDeCompras);
-    localStorage.setItem('carrito', carritoALocalStorage);
+function mostrarContadorHTML(tiempoRestante) {
+    return new Promise((resolve, reject) => {
+        const contadorHTML = `
+            <div class="contador">
+                Tiempo de entrega estimado: <span id="tiempo">${formatoTiempo(tiempoRestante)}</span>
+                <button id="cancelarPedido" class="btn btn-danger">Cancelar pedido</button>
+            </div>
+        `;
+        const contadorContainer = document.getElementById('contador');
+        contadorContainer.innerHTML = contadorHTML;
+        const cancelarPedidoBtn = document.getElementById('cancelarPedido');
+        cancelarPedidoBtn.addEventListener('click', () => {
+            localStorage.removeItem('tiempoRestante');
+            clearInterval(interval);
+            const contador = document.getElementById('tiempo');
+            contador.textContent = 'Pedido cancelado';
+            resolve();
+        });
+        actualizarContador(tiempoRestante);
+    });
 }
 
+function cancelarPedido() {
+    localStorage.removeItem('tiempoRestante');
+    clearInterval(interval);
+    const contador = document.getElementById('tiempo');
+    contador.textContent = 'Pedido cancelado';
+}
 
+function actualizarContador(tiempoRestante) {
+    const contador = document.getElementById('tiempo');
+    interval = setInterval(() => {
+        tiempoRestante--;
+        if (tiempoRestante <= 0) {
+            clearInterval(interval);
+            contador.textContent = 'Tiempo agotado';
+            return;
+        }
+        contador.textContent = formatoTiempo(tiempoRestante);
+        localStorage.setItem('tiempoRestante', tiempoRestante.toString());
+    }, 1000);
+}
 
+function formatoTiempo(tiempo) {
+    const horas = Math.floor(tiempo / 3600);
+    const minutos = Math.floor((tiempo % 3600) / 60);
+    const segundos = tiempo % 60;
+    return `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
+}
 
+let interval;
+
+window.addEventListener('load', () => {
+    const tiempoRestante = localStorage.getItem('tiempoRestante');
+    if (tiempoRestante !== null) {
+        pagoTransferencia();
+    }
+});
